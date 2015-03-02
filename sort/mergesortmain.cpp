@@ -7,9 +7,10 @@
 
 static const int MAXRAND=10000;
 static const int SIZE=1000;
-static const int LOOP=10000;
+static const int LOOP=1000;
 int intArr[SIZE];
 int resArr[SIZE];
+int resArr2[MAXRAND];
 class intNode
 {
 public:
@@ -150,14 +151,34 @@ void mergeSortLL()
         input=input->next;
     }
 }
+void mergeSortBucket()
+{
+    for (int i=0;i<SIZE;i++)
+    {
+        resArr2[intArr[i]]++;
+    }
+    int pos=0;
+    for (int i=0;i<MAXRAND;i++)
+    {
+        while(resArr2[i]-->0)
+        {
+           resArr[pos++]=i;
+        }
+    }
+}
 int main(int argc, char * argv[])
 {
     for(int i=0;i<SIZE;++i)
     {
         resArr[i]=INT_MAX;
     }
+    for(int i=0;i<MAXRAND;++i)
+    {
+        resArr2[i]=0;
+    }
     unsigned long sortTime=0;//GetElapsedTimeInMicroS();
     unsigned long sortTimeLL=0;//GetElapsedTimeInMicroS();
+    unsigned long sortTimeB=0;//GetElapsedTimeInMicroS();
     for(int k=0;k<LOOP;k++)
     {
         generateInput();
@@ -182,11 +203,25 @@ int main(int argc, char * argv[])
             unsigned long endTime=GetElapsedTimeInMicroS();
             sortTimeLL+=(endTime-startTime);
         }
+        
+        for(int i=0;i<SIZE;++i)
+        {
+            resArr[i]=INT_MAX;
+        }
+        {
+            unsigned long startTime=GetElapsedTimeInMicroS();
+            mergeSortBucket();
+            unsigned long endTime=GetElapsedTimeInMicroS();
+            sortTimeB+=(endTime-startTime);
+            //validateArr(resArr, SIZE);
+            //printArr(resArr, SIZE);
+        }
         //printf("resLL:\n");
         //printLL(res);
         //printf("\n");
     }
     printf("merge sort using array      take %llu micro seconds\n", sortTime);
     printf("merge sort using linkedlist take %llu micro seconds\n", sortTimeLL);
+    printf("merge sort using Bucket     take %llu micro seconds\n", sortTimeB);
     return 0;
 }

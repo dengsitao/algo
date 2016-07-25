@@ -8,8 +8,8 @@
 // Enumeration of possible return values
 enum ResultCode {
 
-    // The function was successful 
-    SUCCESS = 0, 
+    // The function was successful
+    SUCCESS = 0,
 
     // An error condition was encountered when executing the function
     FAILURE,
@@ -18,40 +18,40 @@ enum ResultCode {
 class MovieInfo
 {
 public:
-	MovieInfo(int id, std::string title);
-	virtual ~MovieInfo();
-	bool operator==(const MovieInfo& mi2);
-	bool operator>(const MovieInfo& mi2);
-	bool operator<(const MovieInfo& mi2);
+    MovieInfo(int id, std::string title);
+    virtual ~MovieInfo();
+    bool operator==(const MovieInfo& mi2);
+    bool operator>(const MovieInfo& mi2);
+    bool operator<(const MovieInfo& mi2);
 public:
-	std::string m_Name;
-	int m_Id;
+    std::string m_Name;
+    int m_Id;
 };
 
 class CustomerInfo
 {
 public:
-	CustomerInfo(int id, std::string name);
-	virtual ~CustomerInfo();
+    CustomerInfo(int id, std::string name);
+    virtual ~CustomerInfo();
 
-	ResultCode addLikedMovie(MovieInfo *mInfo);
-	ResultCode addFriend(CustomerInfo *cInfo);
-	bool operator==(const CustomerInfo& mi2);
-	bool operator>(const CustomerInfo& mi2);
-	bool operator<(const CustomerInfo& mi2);
-	
+    ResultCode addLikedMovie(MovieInfo *mInfo);
+    ResultCode addFriend(CustomerInfo *cInfo);
+    bool operator==(const CustomerInfo& mi2);
+    bool operator>(const CustomerInfo& mi2);
+    bool operator<(const CustomerInfo& mi2);
+
 public:
-	std::string m_Name;
-	int m_Id;
-	std::list<MovieInfo *> m_likedMovies;
-	std::list<CustomerInfo *> m_friends;
+    std::string m_Name;
+    int m_Id;
+    std::list<MovieInfo *> m_likedMovies;
+    std::list<CustomerInfo *> m_friends;
 };
 
 
 // Maintains a network of movies and customers
 // All methods should return ResultCode::SUCCESS when the operation completes successfully or
 // ResultCode::FAILURE when an error condition occurs.
-class SocialMovies 
+class SocialMovies
 {
 public:
 
@@ -81,11 +81,11 @@ public:
     // returned must have a "like" count >= the like count of every non-returned movie.
     ResultCode getMostLikedMovies(int maximumResults, std::vector<int>& mostLikedMovieIds);
 
-	SocialMovies();
-	~SocialMovies();
+    SocialMovies();
+    ~SocialMovies();
 private:
-	std::list<CustomerInfo *> m_customerList;
-	std::list<MovieInfo *> m_movieList;
+    std::list<CustomerInfo *> m_customerList;
+    std::list<MovieInfo *> m_movieList;
 };
 
 #endif//SOCIAL_MOVIES_H

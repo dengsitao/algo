@@ -60,6 +60,20 @@ void PrintRBTFromRoot(tnode * node)
     printf("-------print rbt end------\n");
 }
 
+tnode* GetSuccessor(tnode * a)
+{
+    tnode * suc=NULL;
+    if (a->rc_!=NULL){
+        while(a!=NULL && a->lc_!=NULL) a=a->lc_;
+        return a;
+    }
+    suc = a->parent_;
+    while(suc != NULL && suc->rc_==a) {
+        a = suc;
+        suc = suc->parent_;
+    }
+    return suc;
+}
 void RotateLeft(tnode * z)
 {
     if (z == NULL || z->rc_ == NULL) {
@@ -262,6 +276,115 @@ void Insert2RBT(tnode * root, tnode * z)
     InsertFix(z);
     printf("====================insert done========\n");
 }
+
+tcolor getColor(tnode* node)
+{
+    if (node==NULL) return BLACK;
+    return node->color_;
+}
+
+void deleteFix(tnode * root, tnode * x)
+{
+    while (x != root && x->color_ == BLACK)
+    {
+        if (x == x->parent_->lc_) {
+            tnode * w = x->parent_->rc_;
+            if (w->color_ == RED) {
+                w->color_ = BLACK;
+                w->parent_->color_ = RED;
+                RotateLeft(w);
+                w = x->parent_->rc_;
+            }
+            if (getColor(w->lc_)==BLACK && getColor(w->rc_) == BLACK) {
+                w->color_=RED;
+                x = x->parent_;
+            }
+            else {
+                if (getColor(w->rc_) == BLACK) { //left_->color==RED
+                    w->color_=RED;
+                    w->lc_->color_=BLACK;
+                    RotateRight(w);
+                    w = x->parent_->rc_;
+                }
+		//now w->right_->color_==RED
+                w->color_=RED;
+                w->parent_->color_=BLACK;
+                RotateLeft(w);
+            }
+        }
+        else {  //if (x == x->parent_->left) {
+            tnode * w = x->parent_->lc_;
+            if (w->color_ == RED) {
+                w->color_ = BLACK;
+                w->parent_->color_ = RED;
+                RotateRight(w);
+                w = x->parent_->lc_;
+            }
+            if (getColor(w->lc_)==BLACK && getColor(w->rc_) == BLACK) {
+                w->color_=RED;
+                x = x->parent_;
+            }
+            else {
+                if (getColor(w->lc_) == BLACK) { //right_->color==RED
+                    w->color_=RED;
+                    w->rc_->color_=BLACK;
+                    RotateLeft(w);
+                    w = x->parent_->lc_;
+                }
+		//now w->left_->color_==RED
+                w->color_=RED;
+                w->parent_->color_=BLACK;
+                RotateRight(w);
+            }
+        }
+    }
+    x->color_=BLACK;
+}
+
+void ReplaceAtoB(tnode * a, tnode* b)
+{
+    if (a->parent_!=NULL) {
+        if(a->parent_->lc_==a) a->parent_->lc_=b;
+        else a->parent_->rc_=b;
+    }
+    b->parent_=a->parent_;
+    if (a->lc_!=NULL) {
+        a->lc_->parent_=b;
+    }
+    b->lc_=a->lc_;
+    if (a->rc_!=NULL) {
+        a->rc_->parent_=b;
+    }
+    b->rc_=a->rc_;
+}
+
+void deleteFromRBT(tnode * root, tnode * z)
+{
+    tnode * y=NULL;
+    tnode * x=NULL;
+    if (z->lc_!=NULL && z->rc_==NULL) {
+        y = z->lc_;
+        x = y;
+    }
+    else if (z->rc_!=NULL && z->lc_==NULL) {
+        y = z->rc_;
+        x = y;
+    }
+    else if (z->rc_==NULL && z->lc_==NULL){
+        y = NULL;
+        x = y;
+    }
+    else {
+        y = GetSuccessor(z);
+        x = y->rc_;
+        ReplaceAtoB(y, x);
+    }
+    ReplaceAtoB(z, y);
+    if (x->color_==BLACK) {
+        deleteFix(root, x);
+    }
+}
+
 int main(int argc, char * argv[])
 {
     int input[10] = { 83,  86,  77,  15,  93,  35,  86,  92,  49,  21 };

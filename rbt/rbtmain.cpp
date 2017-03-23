@@ -64,6 +64,7 @@ tnode* GetSuccessor(tnode * a)
 {
     tnode * suc=NULL;
     if (a->rc_!=NULL){
+	a=a->rc_;
         while(a!=NULL && a->lc_!=NULL) a=a->lc_;
         return a;
     }
@@ -285,28 +286,34 @@ tcolor getColor(tnode* node)
 
 void deleteFix(tnode * root, tnode * x)
 {
+    printf("fix for node :\n");
+    x->printmyself();
     while (x != root && x->color_ == BLACK)
     {
         if (x == x->parent_->lc_) {
             tnode * w = x->parent_->rc_;
             if (w->color_ == RED) {
+		printf("right case 1\n");
                 w->color_ = BLACK;
                 w->parent_->color_ = RED;
                 RotateLeft(w);
                 w = x->parent_->rc_;
             }
             if (getColor(w->lc_)==BLACK && getColor(w->rc_) == BLACK) {
+		printf("right case 2\n");
                 w->color_=RED;
                 x = x->parent_;
             }
             else {
                 if (getColor(w->rc_) == BLACK) { //left_->color==RED
+		    printf("right case 3\n");
                     w->color_=RED;
                     w->lc_->color_=BLACK;
                     RotateRight(w);
                     w = x->parent_->rc_;
                 }
 		//now w->right_->color_==RED
+		printf("right case 4\n");
                 w->color_=RED;
                 w->parent_->color_=BLACK;
                 RotateLeft(w);
@@ -315,23 +322,27 @@ void deleteFix(tnode * root, tnode * x)
         else {  //if (x == x->parent_->left) {
             tnode * w = x->parent_->lc_;
             if (w->color_ == RED) {
+                printf("right case 1\n");
                 w->color_ = BLACK;
                 w->parent_->color_ = RED;
                 RotateRight(w);
                 w = x->parent_->lc_;
             }
             if (getColor(w->lc_)==BLACK && getColor(w->rc_) == BLACK) {
+                printf("right case 2\n");
                 w->color_=RED;
                 x = x->parent_;
             }
             else {
                 if (getColor(w->lc_) == BLACK) { //right_->color==RED
+                    printf("right case 3\n");
                     w->color_=RED;
                     w->rc_->color_=BLACK;
                     RotateLeft(w);
                     w = x->parent_->lc_;
                 }
 		//now w->left_->color_==RED
+                printf("right case 4\n");
                 w->color_=RED;
                 w->parent_->color_=BLACK;
                 RotateRight(w);
@@ -347,21 +358,27 @@ void ReplaceAtoB(tnode * a, tnode* b)
         if(a->parent_->lc_==a) a->parent_->lc_=b;
         else a->parent_->rc_=b;
     }
-    b->parent_=a->parent_;
+    if (b!=NULL)
+    	b->parent_=a->parent_;
     if (a->lc_!=NULL) {
         a->lc_->parent_=b;
     }
-    b->lc_=a->lc_;
+    if (b!=NULL)
+    	b->lc_=a->lc_;
     if (a->rc_!=NULL) {
         a->rc_->parent_=b;
     }
-    b->rc_=a->rc_;
+    if (b!=NULL) {
+    	b->rc_=a->rc_;
+        b->color_=a->color_; 
+    }
 }
 
 void deleteFromRBT(tnode * root, tnode * z)
 {
     tnode * y=NULL;
     tnode * x=NULL;
+    tcolor yocolor = z->color_;
     if (z->lc_!=NULL && z->rc_==NULL) {
         y = z->lc_;
         x = y;
@@ -376,21 +393,37 @@ void deleteFromRBT(tnode * root, tnode * z)
     }
     else {
         y = GetSuccessor(z);
+        yocolor = y->color_;
         x = y->rc_;
-        ReplaceAtoB(y, x);
+	if (x!=NULL) {
+            x->parent_=y->parent_;
+            //x->color_=y->color;
+        }
+	if (y == y->parent_->lc_) y->parent_->lc_=x;
+	else y->parent_->rc_=x;
+	
     }
     ReplaceAtoB(z, y);
-    if (x->color_==BLACK) {
+    //printf("node to delete is :\n");
+    //z->printmyself();
+    //printf("node to replace is :\n");
+    //y->printmyself();
+    //printf("node to replace the replace is :\n");
+    //if (x==NULL) printf("NULL\n");
+    //else x->printmyself();
+    //if (x!=NULL && x->color_==BLACK) {
+    if (yocolor == BLACK) {
         deleteFix(root, x);
     }
 }
 
+#define TOTAL  13
 int main(int argc, char * argv[])
 {
-    int input[10] = { 83,  86,  77,  15,  93,  35,  86,  92,  49,  21 };
+    int input[TOTAL] = { 83,  86,  77,  15,  93,  35,  88,  92,  49,  21, 100, 80, 90};
     printf("input={");
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < TOTAL; i++) {
         //input[i]=rand()%100;
         printf(" %d ", input[i]);
     }
@@ -399,7 +432,7 @@ int main(int argc, char * argv[])
     tnode* root = new tnode();//gen a root first.
     root->value_ = 50;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < TOTAL; i++) {
         tnode * node = new tnode();
         node->value_ = input[i];
 
@@ -410,6 +443,12 @@ int main(int argc, char * argv[])
     }
 
     printf("*******************done insert*****************\n");
+    PrintRBTFromRoot(root);
+
+    printf("*******************start delete*****************\n");
+    tnode* pd = root->lc_;
+    deleteFromRBT(root, pd);
+    printf("*******************done delete*****************\n");
     PrintRBTFromRoot(root);
     return 0;
 }

@@ -10,6 +10,7 @@ public:
 	fh_node * rc;
 	int degree;
 	int max_degree;
+	int n;
 	int value;
 	void p_me();
 };
@@ -26,7 +27,7 @@ public:
 	int max_degree;
 	fh_node * root_list;
 	fh_node * min;
-	int extrace_min();
+	int extract_min();
 	void consolidate();
 };
 

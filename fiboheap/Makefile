@@ -1,3 +1,5 @@
+CFLAGS := -g
+
 SRC := fibo.cpp \
 	fiboheap.cpp \
 	heap.cpp \
@@ -9,7 +11,7 @@ OBJS := $(patsubst %.c,%.o,$(SRC))
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	g++ $(SRC) -o $(TARGET)
+	g++ $(SRC) $(CFLAGS) -o $(TARGET)
 
 clean:
 	rm -f *.o

@@ -6,8 +6,8 @@
 
 void fh_node::p_me()
 {
-	printf("fhnode[%p]:value[%d] degree[%d] parent[%p][%d] lc[%p][%d] rc[%p][%d], left[%p][%d] right[%p][%d]\n"
-		, this, value, degree
+	printf("fhnode[%p]:value[%d] degree[%d] maxdegree[%d] parent[%p][%d] lc[%p][%d] rc[%p][%d], left[%p][%d] right[%p][%d]\n"
+		, this, value, degree, max_degree
 		, this->parent, this->parent==NULL?-1:this->parent->value
 		, this->lc, this->lc==NULL?-1:this->lc->value
 		, this->rc, this->rc==NULL?-1:this->rc->value
@@ -62,6 +62,7 @@ fh_node * hp_arr2fh(int hp[], int idx, int len, fh_node * parent)
 fh_node* heap2fh_node(int hp[], int len)
 {
 	fh_node * root = hp_arr2fh(hp, 0, len, NULL);
+	root->n=len;
 	root->max_degree = ceil(log2(len));
 	printf("max_degree=%d\n", root->max_degree);
 	return root;
@@ -94,17 +95,17 @@ void insert2fibo_heap(fibo_heap * fb_hp, fh_node * node)
 	if (fb_hp==NULL) return;
 	node->degree=0;
 	node->parent=NULL;
-	node->lc=NULL;
-	node->rc=NULL;
+	//node->lc=NULL;
+	//node->rc=NULL;
 	node->left=NULL;
 	node->right=NULL;
 	if (fb_hp->min==NULL)
 	{
 		fb_hp->min=node;
-		fb_hp->root_list=node;
+		fb_hp->min=node;
 	}
 	else {
-		concatenate(fb_hp->root_list, node);
+		concatenate(fb_hp->min, node);
 		if (fb_hp->min->value > node->value) {
 			fb_hp->min = node;
 		}
@@ -112,15 +113,15 @@ void insert2fibo_heap(fibo_heap * fb_hp, fh_node * node)
 			fb_hp->max_degree=node->max_degree;
 		}
 	}
-	fb_hp->n++;
+	fb_hp->n+=node->n;
 }
 
 fibo_heap * merge_fibo_heap(fibo_heap * fb_hp1, fibo_heap * fb_hp2)
 {
 	fibo_heap * fb_hp = new fibo_heap();
-	fb_hp->root_list=fb_hp1->root_list;
 	fb_hp->min=fb_hp1->min;
-	concatenate(fb_hp->root_list, fb_hp2->root_list);
+	fb_hp->min=fb_hp1->min;
+	concatenate(fb_hp->min, fb_hp2->min);
 	if (fb_hp2->min->value < fb_hp->min->value) {
 		fb_hp->min = fb_hp2->min;
 	}
@@ -131,22 +132,35 @@ fibo_heap * merge_fibo_heap(fibo_heap * fb_hp1, fibo_heap * fb_hp2)
 		fb_hp->max_degree=fb_hp2->max_degree;
 	}
 	fb_hp->n=fb_hp1->n+fb_hp2->n;
+	fb_hp->max_degree=ceil(log2(fb_hp->n));
 	return fb_hp;
 }
 
-int fibo_heap::extrace_min()
+int fibo_heap::extract_min()
 {
 	int value = min->value;
+	concatenate(min, min->rc);
+	fh_node *min_child = min->lc;
+	while(min_child!=NULL) {
+		concatenate(min, min_child);
+		min_child=min_child->left;
+	}
 	fh_node * left = min->left;
 	fh_node * right = min->right;
 	left->right = right;
 	right->left = left;
-	concatenate(root_list, min->rc);
-	fh_node *min_child = min->lc;
-	while(min_child!=NULL) {
-		concatenate(root_list, min_child);
-		min_child=min_child->left;
+	if (min==min->right) {
+		delete min;
+		min=NULL;
 	}
+	else {
+		fh_node * temp = min;
+		min=min->right;
+		delete temp;
+		consolidate();
+	}
+	n=n-1;
+	max_degree=ceil(log2(n));
 	return value;
 }
 void fibo_heap::consolidate()
@@ -155,8 +169,8 @@ void fibo_heap::consolidate()
 	for (int i=0;i<max_degree;i++)
 		da[i]=NULL;
 
-	fh_node * node = root_list->right;
-	while(node!=root_list)
+	fh_node * node = min->right;
+	do
 	{
 		int m_d = node->max_degree;
 		while(da[m_d]!=NULL) {
@@ -166,13 +180,18 @@ void fibo_heap::consolidate()
 				ynode=node;
 				node=temp;
 			}
-			//delete ynode from root_list;
+			//delete ynode from min;
 			fh_node * left = ynode->left;
 			fh_node * right = ynode->right;
 			left->right=right;
 			right->left=left;
 			//add ynode as a child of node
-			node->lc->left=ynode;
+			if (node->lc!=NULL) {
+				node->lc->left=ynode;
+			}
+			else {
+				node->lc=ynode;
+			}
 			ynode->parent=node;
 			ynode->right=node->lc;
 			node->max_degree++;
@@ -180,16 +199,16 @@ void fibo_heap::consolidate()
 			m_d++;
 		}
 		da[m_d]=node;
+		node=node->right;
 	}
+	while(node!=min);
 	min=NULL;
-	root_list=NULL;
 	for (int i=0;i<max_degree;i++) {
-		if (min==NULL) {
+		if (min==NULL && da[i]!=NULL) {
 			min=da[i];
-			root_list=da[i];
 		}
 		else {
-			concatenate(root_list, da[i]);
+			concatenate(min, da[i]);
 			if (da[i]!=NULL && da[i]->value < min->value) {
 				min=da[i];
 			}

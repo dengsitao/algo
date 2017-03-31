@@ -16,5 +16,6 @@ int main(int argc, char * argv[])
 	fh_node * root = heap2fh_node(input, HEAP_LEN);
 	print_tree(root);
 	
+	del_fib_node(root);
 	return 0;
 }

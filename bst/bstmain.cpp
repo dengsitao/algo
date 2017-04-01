@@ -272,6 +272,52 @@ void BSTprint(tnode * root, int depth)
     }
 }
 
+class dlk_node 
+{
+public:
+	int value;
+	dlk_node * next;
+	dlk_node * prev;
+	dlk_node():value(-1),next(NULL),prev(NULL){};
+};
+void transBST2dlink(tnode * node, dlk_node ** dlknode)
+{
+	if (node==NULL) return;
+	transBST2dlink(node->left, dlknode);
+	if ((*dlknode)->value!=-1 ) {// not the root
+		dlk_node * p1 = new dlk_node();
+		p1->value=node->value;
+		p1->prev = *dlknode;
+		(*dlknode)->next=p1;
+		*dlknode = p1;
+		printf("add node [%d] to linked list, prev[%d]\n", p1->value, (*dlknode)->value);
+	}
+	else {
+		(*dlknode)->value=node->value;
+		printf("add node [%d] as root to linked list \n", node->value);
+	}
+	transBST2dlink(node->right, dlknode);
+	return ;		
+}
+void print_dlinkedlist(dlk_node * root)
+{
+	while(root->next!=NULL) {
+		printf(" %d ", root->value);
+		root=root->next;
+	}
+	printf("\n");
+}
+void testTransBST2DoubleLinkedlist()
+{
+    tnode *root = new tnode();
+    int input[10] = {5, 3, 8, 2, 6, 4, 7, 1, 9, 0};
+    int d = buildBST(input, 10, root);
+    BSTprint(root, 5);
+	dlk_node * dlk_root = new dlk_node();	
+	dlk_node * droot = dlk_root;
+	transBST2dlink(root, &droot);
+	print_dlinkedlist(dlk_root);
+}
 int main(int argc, char * argv[])
 {
     tnode *root = new tnode();
@@ -282,6 +328,8 @@ int main(int argc, char * argv[])
     BSTprint(root, 5);
     deletenode(root->right->left);
     BSTprint(root, 5);
+
+
     return 0;
 }
 

@@ -7,16 +7,16 @@
 class tnode
 {
 public:
-    tnode(): parent(NULL), left(NULL), right(NULL), value(-1), depth(0), index(1) {
-    };
+    tnode(): parent(NULL), left(NULL), right(NULL), value(-1), depth(0), index(1), sum(0){ };
     tnode * parent;
     tnode * left;
     tnode * right;
     int depth;
     int index;
     int value;
-};
-
+	//for find a sum
+	int sum;
+	void p_me(); }; 
 tnode * deletenode(tnode * node)
 {
     printf("deleting node [%d] from BST\n", node->value);
@@ -271,7 +271,7 @@ void BSTprint(tnode * root, int depth)
         printf("\n");
     }
 }
-
+//transform a bst to a double linkedlist
 class dlk_node 
 {
 public:
@@ -301,11 +301,13 @@ void transBST2dlink(tnode * node, dlk_node ** dlknode)
 }
 void print_dlinkedlist(dlk_node * root)
 {
+	printf("-------start print double linked list-------\n");
 	while(root->next!=NULL) {
 		printf(" %d ", root->value);
 		root=root->next;
 	}
 	printf("\n");
+	printf("---------end print double linked list-------\n");
 }
 void testTransBST2DoubleLinkedlist()
 {
@@ -318,6 +320,89 @@ void testTransBST2DoubleLinkedlist()
 	transBST2dlink(root, &droot);
 	print_dlinkedlist(dlk_root);
 }
+//transform a bst to a double linkedlist end
+//find a path that has sum of a certain number
+void tnode::p_me()
+{
+	printf("this[%p] value[%d] sum[%d] left[%p][%d] right[%p][%d]\n"
+		, this, this->value, this->sum
+		, this->left, this->left==NULL?-1:this->left->value
+		, this->right, this->right==NULL?-1:this->right->value
+		);
+}
+std::list<tnode*> stack;
+void printSumTree(tnode * node)
+{
+	if (node==NULL) return;
+	node->p_me();
+	printSumTree(node->left);
+	printSumTree(node->right);
+}
+void addSumValue(tnode * node, int pValue)
+{
+	if (node==NULL) return;
+	node->sum=pValue+node->value;
+	addSumValue(node->left, node->sum);
+	addSumValue(node->right, node->sum);
+}
+void printPath(int sumv)
+{
+	printf("-------start print path to sum %d-------\n", sumv);
+	std::list<tnode*>::iterator itr = stack.begin();
+	while(itr != stack.end()) {
+		printf("node: ");
+		tnode * n = (tnode*)(*itr);
+		n->p_me();
+		itr++;
+	}
+	printf("---------end print path to sum %d-------\n", sumv);
+}
+bool findPath(tnode * node, int sumv)
+{
+	bool pushed=false;
+	if (node==NULL) return false;
+	//printf("enter [%p][%d]sum[%d] \n", node, node->value,node->sum);
+	if (node->sum >sumv) {
+		return false;
+	}
+	if (node->sum<sumv) {
+		pushed=true;
+		//printf("1push [%p][%d]sum[%d] to stack\n", node, node->value,node->sum);
+		stack.push_back(node);
+	}
+	if (node->sum==sumv) {
+		//printf("2push [%p][%d]sum[%d] to stack\n", node, node->value,node->sum);
+		stack.push_back(node);
+		printPath(sumv);
+		//tnode * p =stack.back();
+		//printf("2pop [%p][%d]sum[%d] from stack\n", p, p->value,p->sum);
+		stack.pop_back();
+		return true;
+	}
+	bool res = findPath(node->left, sumv);
+	res = findPath(node->right, sumv);
+	//tnode * p =stack.back();
+	//printf("3pop[%d] [%p][%d]sum[%d] from stack\n", pushed, p, p->value,p->sum);
+	if (pushed) stack.pop_back();
+	//printf("exit [%p][%d]sum[%d] \n", node, node->value,node->sum);
+	return false;
+	
+}
+
+void testFindSumPath()
+{
+    tnode *root = new tnode();
+    int input[10] = {5, 3, 10, 3, 6, 4, 10, 2, 9, 0};
+    int d = buildBST(input, 10, root);
+    BSTprint(root, 5);
+	addSumValue(root, 0);
+	printSumTree(root);
+	int sumv=15;
+	findPath(root, sumv);
+	
+}
+//find a path that has sum of a certain number end
+
 int main(int argc, char * argv[])
 {
     tnode *root = new tnode();
@@ -329,6 +414,8 @@ int main(int argc, char * argv[])
     deletenode(root->right->left);
     BSTprint(root, 5);
 
+	testTransBST2DoubleLinkedlist();
+	testFindSumPath();
 
     return 0;
 }

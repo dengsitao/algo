@@ -403,6 +403,59 @@ void testFindSumPath()
 }
 //find a path that has sum of a certain number end
 
+//build a bst from an array.
+void printArr(int v[], int len)
+{
+	for (int i=0;i<len;i++)
+		printf(" [%d]=%d ", i, v[i]);
+	printf("\n");
+}
+bool isPostOrderBST(int v[], int begin, int end)
+{
+	int len = end-begin+1;
+	if (v==NULL || len <=1) return true;
+	bool ret = true;
+	//printArr(v, len);
+	int index=end-1;
+	int rootv = v[end];
+	int rbegin = end;
+	//printf("rootv=%d, \n", rootv);
+	while(index>=begin && v[index]>rootv){index--;}
+	if (index>=begin) {
+		rbegin=index+1;
+		//printf("v[index=%d]=%d\n", index,v[index]);
+		while(index>=begin && v[index]<rootv){index--;}
+		index++;
+		//printf("vv[index=%d]=%d\n", index, v[index]);
+		if (index<begin) index=begin;
+		//printf("index=%d\n", index);
+	}
+	else index++;
+	if (index!=begin) {
+		return false;
+	}
+	//printf("test left, begin=%d, end=%d\n", begin, rbegin-1);
+	ret = isPostOrderBST(v, begin, rbegin-1);
+	if (ret==false) return ret;
+	//printf("test right, begin=%d, end=%d\n", rbegin, end-1);
+	ret = isPostOrderBST(v, rbegin, end-1);
+	return ret;
+}
+bool buildBST_backorder()
+{
+	//if (v==NULL || len==0 || root==NULL) return;
+	tnode * root = new tnode();
+	int input[4] = {7,4,6,5};
+	printArr(input, 4);
+	printf("is %s a back-order output of a BST\n", isPostOrderBST(input, 0, 3)==true?"":"not");
+	int input2[7]={5,7,6,9,11,10,8};
+	printArr(input2, 7);
+	printf("is %s a back-order output of a BST\n", isPostOrderBST(input2, 0, 6)==true?"":"not");
+	//flag = isPostOrderBST(input2, 0, 6);
+	//printf("%d\n", flag);
+	//int d = buildBST(input, 4, root);
+	//BSTprint(root, d+1);
+}
 int main(int argc, char * argv[])
 {
     tnode *root = new tnode();
@@ -417,6 +470,7 @@ int main(int argc, char * argv[])
 	testTransBST2DoubleLinkedlist();
 	testFindSumPath();
 
+	buildBST_backorder();
     return 0;
 }
 

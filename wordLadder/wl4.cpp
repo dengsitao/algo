@@ -15,6 +15,8 @@ static bool pflag = true;
 
 void printVecVec(vector<vector<string> >& vecvec)
 {
+    bool tmp = pflag;
+    pflag=true;
     for (int i = 0; i < vecvec.size(); i++) {
         printf(" vec[%d]= ", i);
 
@@ -24,6 +26,7 @@ void printVecVec(vector<vector<string> >& vecvec)
 
         printf("\n");
     }
+    pflag=tmp;
 }
 void printVec(vector<string> & vec)
 {
@@ -41,11 +44,14 @@ class Solution
 public:
     vector<vector<string> > findLadders(string beginWord, string endWord, vector<string>& wordList) {
         createGraph(beginWord, wordList, beginWord, endWord, 1);
+        bool tmp=pflag;
+        pflag=true;
         printf("======create graph done mindepth=%d ===========\n", minDepth);
+        pflag=tmp;
         printCount();
         ansVec.clear();
         curAns.clear();
-        allNodes.clear();
+        //allNodes.clear();
         curDepth = 0;
         depth = 0;
         printf("=======start search==========\n");
@@ -120,7 +126,7 @@ private:
         bool updated=false;
         depth++;
         curAns.push_back(k);
-        if (0)
+        if (1)
         {
             map<string, int>::iterator citr = mDep.find(k);
             if (citr==mDep.end()) {
@@ -136,7 +142,7 @@ private:
                 }
             }
         }
-        if (itr != allNodes.end()) {// && updated==false) {
+        if (itr != allNodes.end() && updated==false) {
             depth--;
             curAns.pop_back();
             return;
@@ -175,9 +181,9 @@ private:
             }
         }
 
-        //if (updated==true) {
-            //allNodes.erase(k);
-        //}
+        if (updated==true) {
+            allNodes.erase(k);
+        }
         allNodes.insert(pair<string, set<string> >(k, cons));
         set<string>::iterator it = cons.begin();
 
@@ -196,13 +202,18 @@ private:
         if (k == endWord) return;
         if (d+1>minDepth) return;
 
-        map<string, set<string> >::iterator itr = allNodes.find(k);
+        map<string, set<string> >::iterator itr1 = allNodes.find(k);
+        if (itr1==allNodes.end()) {
+            printf("wrong node %s\n", k.c_str());
+            return;
+        }
         set<string> cons;
-        printf("---searching %s start---\n", k.c_str());
+        cons=itr1->second;
+        printf("---searching %s , has %lu cons start---\n", k.c_str(), cons.size());
         bool updated=false;
         depth++;
         curAns.push_back(k);
-        if (1){
+        if (0){
             map<string, int>::iterator citr = mDep.find(k);
             if (citr==mDep.end()) {
                 mDep.insert(pair<string, int>(k, d+1));
@@ -217,7 +228,8 @@ private:
                 }
             }
         }
-        {
+        //if (0)
+        /*{
             map<string, int>::iterator citr = count.find(k);
             if (citr!=count.end()) {
                 if (citr->second>0) updated=true;
@@ -230,51 +242,56 @@ private:
             }
         }
 
-        if (itr != allNodes.end()  && updated==false) {
+        //if (itr != allNodes.end()  && updated==false) {
+        if (updated==false) {
             printf(" %s has been processed and no update, skip\n", k.c_str());
             depth--;
             curAns.pop_back();
             return;
-        }
+        }*/
         //printVec(curAns);
-        for (int i = 0; i < wordList.size(); i++) {
-            if (isCon(k, wordList[i])) {
-                if (cons.find(wordList[i]) == cons.end()) {
-                    printf("======= trying %s --> %s, depth=%d ====\n", k.c_str(), wordList[i].c_str(), d+1);
-                    cons.insert(wordList[i]);
+        //for (int i = 0; i < wordList.size(); i++) {
+        set<string>::iterator con_itr = cons.begin();
+        while(con_itr!=cons.end()) {
+            string conStr=*con_itr;
+            //if (isCon(k, conStr)) {
+            updateCount(k, -1);
+                //if (cons.find(conStr) == cons.end()) {
+                    printf("======= trying %s --> %s, depth=%d ====\n", k.c_str(), conStr.c_str(), d+1);
+                    cons.insert(conStr);
                     
-                    if (wordList[i] == endWord) {
+                    if (conStr == endWord) {
                         int nodeMinDep = d+1;
 
                         if (nodeMinDep < minDepth) {
                             printf("find one better solution cur=%d == min=%d\n", nodeMinDep, minDepth);
                             ansVec.clear();
                             minDepth = nodeMinDep;
-                            curAns.push_back(wordList[i]);
+                            curAns.push_back(conStr);
                             printVec(curAns);
                             ansVec.push_back(curAns);
-                            for( int j=0;j<curAns.size()-1;j++) {
+                            /*for( int j=0;j<curAns.size()-1;j++) {
                                 map<string, set<string> >::iterator itr = allNodes.find(curAns[j]);
                                 if (itr==allNodes.end()) continue;
                                 set<string> tempCons = itr->second;
                                 allNodes.erase(itr);
                                 tempCons.erase(curAns[j+1]);
                                 allNodes.insert(pair<string, set<string> >(curAns[j], tempCons));
-                            }
+                            }*/
                             curAns.pop_back();
                         } else if (nodeMinDep == minDepth) {
                             printf("find one more solution cur=%d == min=%d\n", nodeMinDep, minDepth);
-                            curAns.push_back(wordList[i]);
+                            curAns.push_back(conStr);
                             printVec(curAns);
                             ansVec.push_back(curAns);
-                            for( int j=0;j<curAns.size()-1;j++) {
+                            /*for( int j=0;j<curAns.size()-1;j++) {
                                 map<string, set<string> >::iterator itr = allNodes.find(curAns[j]);
                                 if (itr==allNodes.end()) continue;
                                 set<string> tempCons = itr->second;
                                 allNodes.erase(itr);
                                 tempCons.erase(curAns[j+1]);
                                 allNodes.insert(pair<string, set<string> >(curAns[j], tempCons));
-                            }
+                            }*/
                             curAns.pop_back();
                         }
                         else {
@@ -282,19 +299,18 @@ private:
                             printVec(curAns);
                         }
                     }
-
-                }
-            }
+                //}
+            //}
+            con_itr++;
         }
 
-        if (updated==true) {
-            allNodes.erase(k);
-        }
-        allNodes.insert(pair<string, set<string> >(k, cons));
+        //if (updated==true) {
+            //allNodes.erase(k);
+        //}
+        //allNodes.insert(pair<string, set<string> >(k, cons));
         set<string>::iterator it = cons.begin();
 
         while (it != cons.end()) {
-            updateCount(k, -1);
             {
                map<string, int>::iterator citr = mDep.find(*it);
                if (citr!=mDep.end()) {
@@ -306,9 +322,10 @@ private:
                }
             }
             searchGraph(*it, wordList, endWord, d+1);
+            //cons.erase(it);
             it++;
         }
-
+        cons.clear();
         curAns.pop_back();
         depth--;
         printf("---searching %s finish---\n", k.c_str());
@@ -405,7 +422,7 @@ int main(int argc, char * argv[])
     string p4[]= {"ted","tex","red","tax","tad","den","rex","pee"};
     string start5="red";
     string end5="tax";
-    string p5[]= {"ted","tex","red","tax","tad","tix","rex","rix", "iax"};
+    string p5[]= {"ted","tex","tax","tad","rex","tix", "tkx"};
     vector<string> input1(std::begin(p1), std::end(p1));
     vector<string> input2(std::begin(p2), std::end(p2));
     vector<string> input3(std::begin(p3), std::end(p3));
@@ -417,6 +434,9 @@ int main(int argc, char * argv[])
     int choose = 1;
     if (argc>=2) {
         choose = atoi(argv[1]);
+    }
+    if (argc>=3) {
+        pflag = atoi(argv[2]);
     }
     vector<vector<string> > ans;
     switch(choose){

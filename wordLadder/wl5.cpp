@@ -43,6 +43,7 @@ class Solution
 {
 public:
     vector<vector<string> > findLadders(string beginWord, string endWord, vector<string>& wordList) {
+        minDepth = INT_MAX;
         tnode * beginNode = new tnode(beginWord, 0);
         createGraph(beginNode, wordList, endWord, 0);
         bool tmp=pflag;
@@ -50,22 +51,7 @@ public:
         printf("======create graph done mindepth=%d ===========\n", minDepth);
         pflag=tmp;
         depGraph(beginNode, wordList, beginWord, endWord, 0);
-        //printCount();
-        //ansVec.clear();
-        //curAns.clear();
-        //allNodes.clear();
-        //curDepth = 0;
-        //depth = 0;
-        //printf("=======start search==========\n");
-        //searchGraph(beginWord, wordList, endWord, 1);
-        //printCount();
-        //findMinPath(beginWord, endWord);
         return ansVec;
-    }
-    Solution() {
-        minDepth = INT_MAX;
-        curDepth = 0;
-        depth = 0;
     }
 private:
     bool isCon(string beginWord, string word) {
@@ -85,34 +71,6 @@ private:
             return false;
     }
 
-    void printCount()
-    {
-        printf("Count = ");
-        map<string, int>::iterator itr = count.begin();
-        while(itr!=count.end()) {
-            printf(" %s(%d) ", itr->first.c_str(), itr->second);
-            itr++;
-        }
-        printf("\n");
-    }
-    void updateCount(string k, int v)
-    {
-        map<string, int>::iterator itr = count.find(k);
-        if (itr==count.end()) {
-            count.insert(pair<string, int>(k, v));
-        }
-        else {
-            int value=itr->second;
-            count.erase(k);
-            count.insert(pair<string, int>(k, value+v));
-        }
-    }
-
-    map<string, set<string> > allNodes;
-    int depth;
-    map<string, int> count;
-    map<string, int> mDep;
-    int curDepth;
     int minDepth;
     vector<string> curAns;
     vector<vector<string> > ansVec;
@@ -308,174 +266,6 @@ private:
         //depth--;
         printf("---dep %s [%d] finish---\n", key.c_str(), d);
     }
-
-    void searchGraph(string k, vector<string> wordList, string endWord, int d) {
-        if (k == endWord) return;
-        if (d+1>minDepth) return;
-
-        map<string, set<string> >::iterator itr1 = allNodes.find(k);
-        if (itr1==allNodes.end()) {
-            printf("wrong node %s\n", k.c_str());
-            return;
-        }
-        set<string> cons;
-        cons=itr1->second;
-        printf("---searching %s , has %lu cons start---\n", k.c_str(), cons.size());
-        bool updated=false;
-        depth++;
-        curAns.push_back(k);
-        //printVec(curAns);
-        //for (int i = 0; i < wordList.size(); i++) {
-        set<string>::iterator con_itr = cons.begin();
-        while(con_itr!=cons.end()) {
-            string conStr=*con_itr;
-            //if (isCon(k, conStr)) {
-            updateCount(k, -1);
-            //if (cons.find(conStr) == cons.end()) {
-            printf("======= trying %s --> %s, depth=%d ====\n", k.c_str(), conStr.c_str(), d+1);
-            cons.insert(conStr);
-
-            if (conStr == endWord) {
-                int nodeMinDep = d+1;
-
-                if (nodeMinDep < minDepth) {
-                    printf("find one better solution cur=%d == min=%d\n", nodeMinDep, minDepth);
-                    ansVec.clear();
-                    minDepth = nodeMinDep;
-                    curAns.push_back(conStr);
-                    printVec(curAns);
-                    ansVec.push_back(curAns);
-                    /*for( int j=0;j<curAns.size()-1;j++) {
-                        map<string, set<string> >::iterator itr = allNodes.find(curAns[j]);
-                        if (itr==allNodes.end()) continue;
-                        set<string> tempCons = itr->second;
-                        allNodes.erase(itr);
-                        tempCons.erase(curAns[j+1]);
-                        allNodes.insert(pair<string, set<string> >(curAns[j], tempCons));
-                    }*/
-                    curAns.pop_back();
-                } else if (nodeMinDep == minDepth) {
-                    printf("find one more solution cur=%d == min=%d\n", nodeMinDep, minDepth);
-                    curAns.push_back(conStr);
-                    printVec(curAns);
-                    ansVec.push_back(curAns);
-                    /*for( int j=0;j<curAns.size()-1;j++) {
-                        map<string, set<string> >::iterator itr = allNodes.find(curAns[j]);
-                        if (itr==allNodes.end()) continue;
-                        set<string> tempCons = itr->second;
-                        allNodes.erase(itr);
-                        tempCons.erase(curAns[j+1]);
-                        allNodes.insert(pair<string, set<string> >(curAns[j], tempCons));
-                    }*/
-                    curAns.pop_back();
-                }
-                else {
-                    printf("[search]find one worse solution cur=%d > min=%d\n", nodeMinDep, minDepth);
-                    printVec(curAns);
-                }
-            }
-            //}
-            //}
-            con_itr++;
-        }
-
-        //if (updated==true) {
-        //allNodes.erase(k);
-        //}
-        //allNodes.insert(pair<string, set<string> >(k, cons));
-        set<string>::iterator it = cons.begin();
-
-        while (it != cons.end()) {
-            {
-                map<string, int>::iterator citr = mDep.find(*it);
-                if (citr!=mDep.end()) {
-                    if (citr->second < d+1 ) {
-                        printf("don't go back fromn %s(%d) --> %s(%d)\n", k.c_str(), d+1, (*it).c_str(), citr->second);
-                        it++;
-                        continue;
-                    }
-                }
-            }
-            searchGraph(*it, wordList, endWord, d+1);
-            //cons.erase(it);
-            it++;
-        }
-        cons.clear();
-        curAns.pop_back();
-        depth--;
-        printf("---searching %s finish---\n", k.c_str());
-    }
-    /*
-        void findMinPath(string beginWord, string endWord)
-        {
-            if (curDepth>=minDepth) {
-                return;
-            }
-            //printf("--processing %s start, curDep=%d\n", beginWord.c_str(), curDepth);
-            map<string, set<string> >::iterator itr = allNodes.find(beginWord);
-            if (itr == allNodes.end()) {
-                return;
-            }
-            if (std::find(curAns.begin(), curAns.end(), beginWord)!=curAns.end()) {
-                //printf("--processing %s is already in curAns, just return\n", beginWord.c_str());
-                return;
-            }
-            //map<string, vector<string> >::iterator citr = count.find(beginWord);
-            //if (citr->second.size() < curDepth) {
-                //printf("--processing %s 's depth %d > %d, just return\n", beginWord.c_str(), curDepth, citr->second);
-                //return;
-            //}
-
-            curDepth++;
-            curAns.push_back(beginWord);
-            set<string> cons = itr->second;
-            allNodes.erase(beginWord);
-
-            bool found=false;
-            set<string>::iterator it=cons.begin();
-            while(it!=cons.end()) {
-                //printf("--processing %s's con %s, curDep=%d\n", beginWord.c_str(), (*it).c_str(), curDepth);
-                if ((*it)==endWord) {//found it
-                    if (curDepth==minDepth) {
-                        //printf("find one more solution cur=%d == min=%d\n", curDepth, minDepth);
-                        curAns.push_back(*it);
-                        ansVec.push_back(curAns);
-                        curAns.pop_back();
-                        //printVec(curAns);
-                        //printVecVec(ansVec);
-                        found=true;
-                        break;
-                    }
-                    else {
-                        //printf("find one better solution cur=%d < min=%d\n", curDepth, minDepth);
-                        minDepth=curDepth;
-                        ansVec.clear();
-                        curAns.push_back(*it);
-                        ansVec.push_back(curAns);
-                        curAns.pop_back();
-                        //printVec(curAns);
-                        //printVecVec(ansVec);
-                        found=true;
-                        break;
-                    }
-                }
-                it++;
-            }
-
-            if (found==false) {
-                set<string>::iterator it=cons.begin();
-                while(it!=cons.end()) {
-                    findMinPath(*it, endWord);
-                    it++;
-                }
-            }
-            curDepth--;
-            //cons.clear();
-            //if (curDepth==citr->second) allNodes.erase(beginWord);
-            //printf("--processing %s end, pop %s, curDep=%d, cons.size=%lu\n", beginWord.c_str(), curAns.back().c_str(), curDepth, cons.size());
-            curAns.pop_back();
-            allNodes.insert(pair<string, set<string> >(beginWord, cons));
-        }*/
 
 };
 

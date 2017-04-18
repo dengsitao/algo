@@ -7,12 +7,19 @@
 #include <map>
 #include <climits>
 #include <algorithm>
+#include <time.h>
 
 using namespace std;
 static bool pflag = true;
 
 #define printf if(pflag)printf
 
+unsigned long curTimeMs()
+{
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec*1000*1000+t.tv_nsec/1000;
+}
 void printVecVec(vector<vector<string> >& vecvec)
 {
     bool tmp = pflag;
@@ -45,12 +52,34 @@ public:
     vector<vector<string> > findLadders(string beginWord, string endWord, vector<string>& wordList) {
         minDepth = INT_MAX;
         tnode * beginNode = new tnode(beginWord, 0);
-        createGraph(beginNode, wordList, endWord, 0);
-        bool tmp=pflag;
-        pflag=true;
-        printf("======create graph done mindepth=%d ===========\n", minDepth);
-        pflag=tmp;
-        depGraph(beginNode, wordList, beginWord, endWord, 0);
+        {
+            unsigned long curTime1 = curTimeMs();
+            createNodes(wordList);
+            createGraph(beginNode, wordList, endWord, 0);
+            unsigned long curTime2 = curTimeMs();
+            bool tmp=pflag;
+            pflag=true;
+            printf("======create Graph use %lu micro seconds\n", curTime2-curTime1);
+            pflag=tmp;
+        }
+        {
+            unsigned long curTime1 = curTimeMs();
+            updateDepth(beginNode);
+            unsigned long curTime2 = curTimeMs();
+            bool tmp=pflag;
+            pflag=true;
+            printf("======update depth use %lu micro seconds\n", curTime2-curTime1);
+            pflag=tmp;
+        }
+        {
+            unsigned long curTime1 = curTimeMs();
+            depGraph(beginNode, wordList, beginWord, endWord, 0);
+            unsigned long curTime2 = curTimeMs();
+            bool tmp=pflag;
+            pflag=true;
+            printf("======find solution use %lu micro seconds\n", curTime2-curTime1);
+            pflag=tmp;
+        }
         return ansVec;
     }
 private:
@@ -84,15 +113,24 @@ private:
         map<string, tnode *> to_cons;
         map<string, tnode *> from_cons;
         bool init;
+        bool updated;
         tnode(string v, int d)
         {
             value=v;
             depth=d;
             init=false;
+            updated=false;
         }
     };
     map<string, tnode*> nodeMap;
 
+    void createNodes(vector<string>& wordList)
+    {
+        for (int i = 0; i < wordList.size(); i++) {
+            tnode *p = new tnode(wordList[i], INT_MAX);
+            nodeMap.insert(pair<string, tnode*>(wordList[i], p));
+        }
+    }
     void createGraph(tnode * curNode, vector<string>& wordList, string endWord, int d) {
         if (curNode==NULL) return;
         string key=curNode->value;
@@ -112,7 +150,7 @@ private:
                     tnode *p = new tnode(wordList[i], curNode->depth+1);
                     nodeMap.insert(pair<string, tnode*>(wordList[i], p));
                     curNode->to_cons.insert(pair<string, tnode *>(wordList[i], p));
-                    printf("[NULL]=== insert %s(%d)[%p] --> %s(%d)[%p]---\n", key.c_str(), curNode->depth, curNode, wordList[i].c_str(), curNode->depth+2, p); 
+                    printf("[NULL]=== insert %s(%d)[%p] --> %s(%d)[%p]---\n", key.c_str(), curNode->depth, curNode, wordList[i].c_str(), curNode->depth+1, p); 
                 }
                 else {
                     tnode *to = to_itr->second;
@@ -120,6 +158,7 @@ private:
                         //printf("[INORDER]===add  %s(%d)[%p] --> %s(%d)[%p] \n", key.c_str(), curNode->depth, curNode, wordList[i].c_str(), to->depth, to);
                         printf("[createGraph]: update to node %s 's depth from %d to %d\n", to->value.c_str(), to->depth, curNode->depth+1);
                         to->depth=curNode->depth+1;
+                        to->updated=true;
                         updateDepth(to);
                         //curNode->to_cons.insert(pair<string, tnode *>(wordList[i], to));
                     }
@@ -127,6 +166,7 @@ private:
                         if (curNode->depth>to->depth+1) {
                             printf("[createGraph]: update curnode %s 's depth from %d to %d\n", curNode->value.c_str(), curNode->depth, to->depth+1);
                             curNode->depth=to->depth+1;
+                            //curNode->updated=true;
                             updateDepth(curNode);
                         }
                         //map<string, tnode *>::iterator totoitr=to->to_cons.find(key);
@@ -139,7 +179,7 @@ private:
                         //printf("=== %s(%d)[%p] and %s(%d)[%p] has same depth\n", key.c_str(), curNode->depth, curNode, wordList[i].c_str(), to->depth, to);
                         //printf("[SAME]===add  %s(%d)[%p] --> %s(%d)[%p] \n", key.c_str(), curNode->depth, curNode, wordList[i].c_str(), to->depth, to);
                         map<string, tnode *>::iterator curitr=curNode->to_cons.find(wordList[i]);
-                        if (curitr==curNode->to_cons.find(wordList[i])) {
+                        if (curitr==curNode->to_cons.end()) {
                             printf("===add  %s(%d)[%p] --> %s(%d)[%p] \n", key.c_str(), curNode->depth, curNode, wordList[i].c_str(), to->depth, to);
                             curNode->to_cons.insert(pair<string, tnode *>(wordList[i], to));
                         }
@@ -176,6 +216,7 @@ private:
         while (it != curNode->to_cons.end()) {
             tnode * to = it->second;
             if (to->depth >curNode->depth+1) {
+                //printf("[updateDepth]: update to node %s [%d]'s depth from %d to %d\n", to->value.c_str(), to->updated, to->depth, curNode->depth+1);
                 to->depth=curNode->depth+1;
                 updateDepth(to);
             }

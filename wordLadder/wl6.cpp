@@ -8,6 +8,7 @@
 #include <climits>
 #include <algorithm>
 #include <time.h>
+#include <string.h>
 
 using namespace std;
 static bool pflag = true;
@@ -56,6 +57,7 @@ public:
             unsigned long curTime1 = curTimeMs();
             //createNodes(wordList);
             //createGraph(beginNode, wordList, endWord, 0);
+            genRelation(beginWord, wordList);
             genGraph(beginWord, endWord, wordList, 0);
             unsigned long curTime2 = curTimeMs();
             bool tmp=pflag;
@@ -73,7 +75,7 @@ public:
         return finalAns;
     }
 private:
-    bool isCon(string beginWord, string word) {
+    bool isConn(string beginWord, string word) {
         int diff = 0;
 
         if (beginWord.size() != word.size()) return false;
@@ -89,14 +91,67 @@ private:
         else //same word
             return false;
     }
+    bool isCon(int i, int j) {
+        if (i<j)
+            return relationMatrix[i][j];
+        else
+            return relationMatrix[j][i];
+    }
 
     int minDepth;
     vector<string> curAns;
     vector<vector<string> > ansVec;
 
     list<string> strqueue;
+    list<int> stridxqueue;
     vector<list<string> > fiGraph;
     list<int> ongoingLayer;
+
+    int ** relationMatrix;
+    string bWord;
+    void genRelation(string beginWord, vector<string> &wordList)
+    {
+        bWord=beginWord;
+        int size=wordList.size();
+        relationMatrix = new int *[size+1];
+        //memset(relationMatrix, 0, size*size);
+        for (int i=0;i<size+1;i++) {
+            relationMatrix[i]=new int[size+1];
+            for (int j=i;j<size+1;j++) {
+                string k1;
+                string k2;
+                if (i==0)k1=bWord;
+                else
+                    k1=wordList[i-1];
+                if (j==0)k2=bWord;
+                else
+                    k2=wordList[j-1];
+                if (isConn(k1, k2)) {
+                    relationMatrix[i][j]=1;
+                }
+            }
+        }
+        printf("    ");
+        for (int i=0;i<size;i++) {
+            printf(" %s ", wordList[i].c_str());
+        }
+        printf("\n");
+        int strlen=wordList[0].size();
+        for (int i=0;i<size;i++) {
+            printf("%s ", wordList[i].c_str());
+            for (int j=0;j<size;j++) {
+                //char fmt[8];
+                //sprintf(fmt, " \%%dd ", strlen/2);
+                //string format;
+                //format.append(" \%");
+                //format.append();
+                //format.append("d ");
+                //printf(format.c_str(), relationMatrix[i][j]); 
+                printf("  %d  ", relationMatrix[i][j]); 
+            }
+            printf("\n");
+        }
+    }
     void genGraph(string beginWord, string endWord, vector<string> & wordList, int depth)
     {
         bool inThisLayer=false;
@@ -108,7 +163,8 @@ private:
             ansVec.push_back(ans);
             ansVec.push_back(ans);
             count++;
-            strqueue.push_back(beginWord);
+            //strqueue.push_back(beginWord);
+            stridxqueue.push_back(0);
         }
         int lc =0;
         vector<string> curAns = ansVec.front();
@@ -134,7 +190,9 @@ private:
                     depth++;
                 }
                 string curWord=strqueue.front();
+                int curIndex=stridxqueue.front();
                 strqueue.pop_front();
+                stridxqueue.pop_front();
                 printf("start %s(%d) count=%d, lc=%d\n", curWord.c_str(), depth, count, lc);
                 
                 curAns=ansVec[index];
@@ -143,15 +201,17 @@ private:
                 count--;
                 
                 for (int i=0;i<wordList.size();i++) {
-                    if (wordList[i]==curWord) {
-                        wordList[i]="";
-                    }
-                    if (isCon(curWord, wordList[i])) {
+                    //if (wordList[i]==curWord) {
+                        //wordList[i]="";
+                    //}
+                    //if (isCon(curWord, wordList[i])) {
+                    if (isCon(curIndex, i)) {
                         if (endWord==wordList[i]) {
                             inThisLayer=true;
                         }
                         else {
                             strqueue.push_back(wordList[i]);
+                            stridxqueue.push_back(i);
                         }
                         ongoingLayer.push_back(i);
 

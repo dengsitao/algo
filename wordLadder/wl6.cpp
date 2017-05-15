@@ -112,6 +112,7 @@ private:
     void genRelation(string beginWord, vector<string> &wordList)
     {
         bWord=beginWord;
+        //wordList.insert(wordList.begin(), beginWord);
         int size=wordList.size();
         relationMatrix = new int *[size+1];
         //memset(relationMatrix, 0, size*size);
@@ -134,7 +135,7 @@ private:
                 }
             }
         }
-        printf("%s ", beginWord.c_str());
+        printf("    %s ", beginWord.c_str());
         for (int i=0;i<size;i++) {
                 printf(" %s ", wordList[i].c_str());
         }
@@ -165,13 +166,13 @@ private:
             ansVec.push_back(ans);
             count++;
             //strqueue.push_back(beginWord);
-            stridxqueue.push_back(0);
+            stridxqueue.push_back(-1);
         }
         int lc =0;
         vector<string> curAns = ansVec.front();
         int ansCount=count;
         int index=0;
-            while (!strqueue.empty() || inThisLayer==false) {
+            while (0==strqueue.size() || inThisLayer==false) {
 
                 if (count==0) {
                     printf("-------layer %d finish-----\n", depth);
@@ -192,22 +193,26 @@ private:
                 }
                 //string curWord=strqueue.front();
                 int curIndex=stridxqueue.front();
-                string curWord=wordList[curIndex];
+                string curWord=beginWord;
+                if (curIndex!=-1) curWord=wordList[curIndex];
+                if (curIndex==-1) curIndex=0;
                 //strqueue.pop_front();
                 stridxqueue.pop_front();
-                printf("start %s(%d) count=%d, lc=%d\n", curWord.c_str(), depth, count, lc);
+                printf("start %s(%d) count=%d, lc=%d, stridxqueue.size=%lu empty=%d\n"
+                    , curWord.c_str(), depth, count, lc, stridxqueue.size(), stridxqueue.empty());
                 
                 curAns=ansVec[index];
                 ansVec.pop_back();
                 //index++;
                 count--;
+                if (depth>wordList.size()) break;
                 
                 for (int i=0;i<wordList.size();i++) {
                     //if (wordList[i]==curWord) {
                         //wordList[i]="";
                     //}
                     //if (isCon(curWord, wordList[i])) {
-                    if (isCon(curIndex, i)) {
+                    if (isCon(curIndex, i+1)) {
                         if (endWord==wordList[i]) {
                             inThisLayer=true;
                         }
@@ -221,7 +226,7 @@ private:
                         ansVec[index].insert(ansVec[index].end(), wordList[i]);
                         ansVec.push_back(ans);
                         index++;
-                        printf("lc=%d, add %s(%d) -->%s(%d)\n", lc, curWord.c_str(), depth, wordList[i].c_str(), depth+1);
+                        printf("lc=%d, add %s(%d) -->%s(%d)\n", lc, curWord.c_str(), curIndex, wordList[i].c_str(), i);
                         lc++;
 
                     }

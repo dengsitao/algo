@@ -13,7 +13,7 @@
 using namespace std;
 static bool pflag = true;
 
-#define printf if(pflag)printf
+//#define printf if(pflag)printf
 
 unsigned long curTimeMs()
 {
@@ -75,7 +75,7 @@ public:
         return finalAns;
     }
 private:
-    bool isConn(string beginWord, string word) {
+    bool isConn(string &beginWord, string &word) {
         int diff = 0;
 
         if (beginWord.size() != word.size()) return false;
@@ -117,6 +117,8 @@ private:
         //memset(relationMatrix, 0, size*size);
         for (int i=0;i<size+1;i++) {
             relationMatrix[i]=new int[size+1];
+            memset(relationMatrix[i], 0, sizeof(int)*(size+1));
+            //printf("relationMatrix[%d]=%d\n", size, relationMatrix[i][size]);
             for (int j=i;j<size+1;j++) {
                 string k1;
                 string k2;
@@ -127,30 +129,29 @@ private:
                 else
                     k2=wordList[j-1];
                 if (isConn(k1, k2)) {
+                    //printf("set k1=%s, k2=%s [%d][%d]=1\n",k1.c_str(), k2.c_str(), i, j);
                     relationMatrix[i][j]=1;
                 }
             }
         }
-        printf("    ");
+        printf("%s ", beginWord.c_str());
         for (int i=0;i<size;i++) {
-            printf(" %s ", wordList[i].c_str());
+                printf(" %s ", wordList[i].c_str());
         }
         printf("\n");
         int strlen=wordList[0].size();
-        for (int i=0;i<size;i++) {
-            printf("%s ", wordList[i].c_str());
-            for (int j=0;j<size;j++) {
-                //char fmt[8];
-                //sprintf(fmt, " \%%dd ", strlen/2);
-                //string format;
-                //format.append(" \%");
-                //format.append();
-                //format.append("d ");
-                //printf(format.c_str(), relationMatrix[i][j]); 
-                printf("  %d  ", relationMatrix[i][j]); 
+        for (int i=0;i<size+1;i++) {
+            if (0==i)
+                printf("%s ", beginWord.c_str());
+            else
+                printf("%s ", wordList[i-1].c_str());
+
+            for (int j=0;j<size+1;j++) {
+                printf(" %d  ", relationMatrix[i][j]); 
             }
             printf("\n");
         }
+        printf("====gen relation finish===\n");
     }
     void genGraph(string beginWord, string endWord, vector<string> & wordList, int depth)
     {
@@ -189,9 +190,10 @@ private:
                     index=0;
                     depth++;
                 }
-                string curWord=strqueue.front();
+                //string curWord=strqueue.front();
                 int curIndex=stridxqueue.front();
-                strqueue.pop_front();
+                string curWord=wordList[curIndex];
+                //strqueue.pop_front();
                 stridxqueue.pop_front();
                 printf("start %s(%d) count=%d, lc=%d\n", curWord.c_str(), depth, count, lc);
                 
@@ -258,7 +260,7 @@ int main(int argc, char * argv[])
     //vector<string> input;
     //copy(std::begin(p), std::end(p), input);
     Solution so;
-    int choose = 1;
+    int choose = 2;
     if (argc>=2) {
         choose = atoi(argv[1]);
     }
@@ -272,7 +274,7 @@ int main(int argc, char * argv[])
         ans = so.findLadders(start1, end1, input1);
         break;
     case 2:
-        printf("input has %lu elements\n", input2.size());
+        printf("input has %lu elements, begin=%s, end=%s\n", input2.size(), start2.c_str(), end2.c_str());
         ans = so.findLadders(start2, end2, input2);
         break;
     case 3:
